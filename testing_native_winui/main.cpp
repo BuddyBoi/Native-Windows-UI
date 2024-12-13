@@ -1,3 +1,4 @@
+#include "web_request_api.hpp"
 #include <windows.h>
 #include <string>
 #include <vector>
@@ -5,6 +6,7 @@
 namespace vars
 {
 	HWND hwnd = nullptr;
+	console::Console console;
 }
 
 namespace util
@@ -262,6 +264,9 @@ namespace util
 					add_control( CONTROL_TYPE_TEXTBOX, 200, 20, "TEXT_INPUT_USERNAME", hWnd );
 					add_control( CONTROL_TYPE_TEXTBOX, 200, 20, "TEXT_INPUT_PASSWORD", hWnd );
 					add_control( CONTROL_TYPE_BUTTON, 200, 20, "BUTTON_LOGIN", hWnd, "Login" );
+					add_control( CONTROL_TYPE_TEXTBOX, 200, 20, "TEXT_OUTPUT_TEMP_LOW", hWnd );
+					add_control( CONTROL_TYPE_TEXTBOX, 200, 20, "TEXT_OUTPUT_TEMP_HIGH", hWnd );
+					add_control( CONTROL_TYPE_BUTTON, 200, 20, "BUTTON_GET_WEATHER", hWnd, "Get Temperature" );
 
 					T_CONTROL ctr_textbox = get_control( "TEXT_INPUT" );
 
@@ -291,6 +296,10 @@ namespace util
 
 						//clear textbox
 						util::send_message::textbox::clear( ctr_textbox.ptr );
+						
+						//dbg: log to console
+						vars::console.Write( "[LOG][WINDOW] Pressed BUTTON_ADD Adding '%s' to LISTBOX_DATA\n", textbox_input.c_str() );
+
 						break;
 					}
 					else if ( control.name == "BUTTON_SUB" )
@@ -316,6 +325,9 @@ namespace util
 
 							//clear textbox
 							util::send_message::textbox::clear( ctr_textbox.ptr );
+
+							//dbg: log to console
+							vars::console.Write( "[LOG][WINDOW] Pressed BUTTON_SUB Removing '%s' from LISTBOX_DATA\n", textbox_input.c_str() );
 						}
 					}
 					else if ( control.name == "BUTTON_CLR" )
@@ -369,6 +381,50 @@ namespace util
 
 						util::send_message::listbox::add( ctr_listbox.ptr, "SUCCESSFUL LOGIN" );
 					}
+					else if ( control.name == "BUTTON_GET_WEATHER" )
+					{
+						T_CONTROL ctr_textbox_temp_low = get_control( "TEXT_OUTPUT_TEMP_LOW" );
+						T_CONTROL ctr_textbox_temp_high = get_control( "TEXT_OUTPUT_TEMP_HIGH" );
+						if ( !ctr_textbox_temp_low.ptr
+							|| !ctr_textbox_temp_high.ptr )
+							break;
+
+						if ( !weather_api::update( "2024-12-13", "35.23", "-80.84" ) )
+						{
+							vars::console.Write( "[LOG][WINDOW] Pressed BUTTON_GET_WEATHER: weather_api::update() FAILED\n" );
+							break;
+						}
+
+						float f_temp_min = 0.0f;
+						float f_temp_max = 0.0f;
+
+						f_temp_min = weather_api::get_temperature_day_min();
+						f_temp_max = weather_api::get_temperature_day_max();
+						if ( !f_temp_min
+							|| !f_temp_max )
+						{
+							vars::console.Write( "[LOG][WINDOW] Pressed BUTTON_GET_WEATHER: f_temp floatval INVALID\n" );
+							break;
+						}
+
+						std::string s_temp_min = "";
+						std::string s_temp_max = "";
+
+						s_temp_min = std::to_string( f_temp_min );
+						s_temp_max = std::to_string( f_temp_max );
+
+						if ( !s_temp_min.size()
+							|| !s_temp_max.size() )
+						{
+							vars::console.Write( "[LOG][WINDOW] Pressed BUTTON_GET_WEATHER: s_temp stringval INVALID\n" );
+							break;
+						}
+
+						//set temp strings
+						util::send_message::textbox::set( ctr_textbox_temp_low.ptr, s_temp_min );
+						util::send_message::textbox::set( ctr_textbox_temp_high.ptr, s_temp_max );
+						vars::console.Write( "[LOG][WINDOW] Pressed BUTTON_GET_WEATHER: Successfully set temp strings\n" );
+					}
 				}
 				break;
 
@@ -418,10 +474,27 @@ namespace util
 	}
 }
 
+void setup()
+{
+	vars::console = console::Console( 1 );
+	if ( !vars::console.Allocate() )
+	{
+		MessageBoxA( 0, "FAILED TO INIT CONSOLE", 0, 0 );
+	}
+	
+	vars::console.Write( "[LOG] console allocated\n" );
+	vars::console.Write( "[LOG] setting up window...\n" );
+}
+
 int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow )
 {
-	vars::hwnd = util::window::create( "Buddy UI", "BuddyUIWindow", 800, 600, hInstance );
+	//pre-window setup
+	setup();
+	
+	//weather_api::test_123();
+	Sleep( 2000 );
 
-	util::window::loop( nCmdShow );
+	vars::hwnd = util::window::create( "Buddy UI", "BuddyUIWindow", 800, 600, hInstance ); //create window
+	util::window::loop( nCmdShow ); //run window MSG loop
 	return 0;
 }
