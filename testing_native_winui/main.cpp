@@ -367,13 +367,13 @@ namespace util
 							break;
 
 						//check username and password
-						if ( s_username != "buddy" )
+						if ( s_username != "user" )
 						{
 							util::send_message::listbox::add( ctr_listbox.ptr, "ERR: INVALID USER" );
 							break;
 						}
 
-						if ( s_password != "Buddy30" )
+						if ( s_password != "Pass123" )
 						{
 							util::send_message::listbox::add( ctr_listbox.ptr, "ERR: INVALID PASS" );
 							break;
@@ -389,7 +389,7 @@ namespace util
 							|| !ctr_textbox_temp_high.ptr )
 							break;
 
-						if ( !weather_api::update( "2024-12-13", "35.23", "-80.84" ) )
+						if ( !weather_api::update( "2025-03-25", "25", "-40" ) )
 						{
 							vars::console.Write( "[LOG][WINDOW] Pressed BUTTON_GET_WEATHER: weather_api::update() FAILED\n" );
 							break;

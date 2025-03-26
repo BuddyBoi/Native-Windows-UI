@@ -1,6 +1,6 @@
 #pragma once
-#include "../../third_party_libs/httplib.h"
-#include "../../third_party_libs/json.hpp"
+#include "../../third_party_libs/httplib.h" //github: https://github.com/yhirose/cpp-httplib
+#include "../../third_party_libs/json.hpp" //github: https://github.com/nlohmann/json
 #include <Windows.h>
 #include <Psapi.h>
 #include <vector>
